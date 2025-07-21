@@ -1,96 +1,234 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Filter, ChevronRight, MessageCircle, Bell, X, Euro, ChevronDown, Clock } from "lucide-react"
-import { useState, useEffect } from "react"
-import FilterModal from "./filter-modal"
-import ProjectDetail from "./project-detail"
-import Image from "next/image"
-import MobileNav from "./mobile-nav"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Filter,
+  ChevronRight,
+  MessageCircle,
+  Bell,
+  X,
+  Euro,
+  ChevronDown,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import FilterModal from "./filter-modal";
+import ProjectDetail from "./project-detail";
+import Image from "next/image";
+import MobileNav from "./mobile-nav";
+import { useProjects } from "@/lib/hooks/useProjects";
+import { useApplications } from "@/lib/hooks/useApplications";
+import { useCatalog } from "@/lib/hooks/useCatalog";
+import { ProjectFilters } from "@/types/api";
+import { FilterState } from "@/types/filters";
 
 export default function ProjectListing() {
-  const [showFilter, setShowFilter] = useState(false)
-  const [selectedProject, setSelectedProject] = useState<number | null>(null)
-  const [appliedFilters, setAppliedFilters] = useState({
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     especialidades: [],
     habilidades: [],
     tipoProyecto: [],
     industria: [],
-  })
-  const [showAppliedFilters, setShowAppliedFilters] = useState(true)
-  const [isLoaded, setIsLoaded] = useState(false)
+    sortBy: "recent",
+  });
+  const [showAppliedFilters, setShowAppliedFilters] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const projects = [
-    {
-      id: 1,
-      title: "Diseña una app móvil para un SaaS de contabilidad",
-      description: "Desarrollo de apps | Educación",
-      price: "25 - 35 €/h",
-      hours: "160 h/mes",
-      skills: ["React", "Gitlab", "Next.js", "Figma", "Project Management"],
-      icon: "J",
-      bgColor: "bg-purple-500",
-      company: "JapyBrand",
-    },
-    {
-      id: 2,
-      title: "Desarrolla una plataforma de e-learning",
-      description: "Desarrollo web",
-      price: "30 - 40 €/h",
-      hours: "160 h/mes",
-      skills: ["Vue.js", "GitHub", "Node.js", "Adobe XD", "Project Management"],
-      icon: "S",
-      bgColor: "bg-blue-600",
-      company: "TechSolutions",
-    },
-    {
-      id: 3,
-      title: "Crea un CRM personalizado para pymes",
-      description: "Negocios",
-      price: "20 - 30 €/h",
-      hours: "160 h/mes",
-      skills: ["Angular", "Bitbucket", "Express.js", "Sketch", "Project Management"],
-      icon: "uber",
-      bgColor: "bg-black",
-      company: "Uber",
-    },
-    {
-      id: 4,
-      title: "Desarrollar una estrategia de marketing digital",
-      description: "Marketing | Estrategia",
-      price: "25 - 35 €/h",
-      hours: "160 h/mes",
-      skills: ["Google Ads", "Trello", "SEO", "Adobe Illustrator", "Project Management"],
-      icon: "B",
-      bgColor: "bg-black",
-      company: "Brand",
-    },
-  ]
+  // Initialize with default filters for published projects
+  const [currentFilters, setCurrentFilters] = useState<ProjectFilters>({
+    status: "PUBLISHED",
+    page: 1,
+    limit: 10,
+    sortBy: "publishedAt",
+    order: "desc", // Most recent first by default
+  });
+
+  // Use custom hooks for data management
+  const {
+    projects = [],
+    loading,
+    error,
+    pagination,
+    hasMore,
+    loadMore,
+    updateFilters,
+  } = useProjects(currentFilters);
+  const { isAppliedToProject } = useApplications();
+  const { data: catalogData } = useCatalog();
+
+  // Update filters when currentFilters change
+  useEffect(() => {
+    updateFilters(currentFilters);
+  }, [currentFilters, updateFilters]);
 
   useEffect(() => {
     // Trigger animation after component mounts
     const timer = setTimeout(() => {
-      setIsLoaded(true)
-    }, 200)
+      setIsLoaded(true);
+    }, 200);
 
-    return () => clearTimeout(timer)
-  }, [])
+    return () => clearTimeout(timer);
+  }, []);
 
-  const removeFilter = (category: string, filter: string) => {
-    setAppliedFilters((prev) => ({
-      ...prev,
-      [category]: prev[category].filter((f) => f !== filter),
-    }))
-  }
+  // Helper functions to convert filter names to IDs using catalog data
+  const mapNamesToIds = {
+    especialidades: (names: string[]): string[] => {
+      return names.map(name => {
+        const item = catalogData.specialties.find(s => s.name === name);
+        return item?.id || name; // Fallback to name if ID not found
+      });
+    },
+    habilidades: (names: string[]): string[] => {
+      return names.map(name => {
+        const item = catalogData.skills.find(s => s.name === name);
+        return item?.id || name; // Fallback to name if ID not found
+      });
+    },
+    tipoProyecto: (names: string[]): string[] => {
+      return names.map(name => {
+        const item = catalogData.categories.find(c => c.name === name);
+        return item?.id || name; // Fallback to name if ID not found
+      });
+    },
+    industria: (names: string[]): string => {
+      if (names.length === 0) return '';
+      const name = names[0]; // API expects single industry
+      const item = catalogData.industries.find(i => i.name === name);
+      return item?.id || name; // Fallback to name if ID not found
+    },
+  };
+
+  // Function to apply filters from the filter modal
+  const applyFilters = (newFilters: FilterState) => {
+    setAppliedFilters(newFilters);
+
+    // Always create base API filters with sort
+    const sortBy = newFilters.sortBy || 'recent'; // Default to 'recent' if undefined
+    const apiFilters: ProjectFilters = {
+      status: "PUBLISHED",
+      page: 1,
+      limit: 10,
+      sortBy: 'publishedAt', // Always sort by publication date
+      order: sortBy === 'recent' ? 'desc' : 'asc', // Always include order
+    };
+
+    // Check if any other filters are actually applied
+    const hasOtherFilters = newFilters.especialidades.length > 0 ||
+                           newFilters.habilidades.length > 0 ||
+                           newFilters.industria.length > 0 ||
+                           newFilters.tipoProyecto.length > 0;
+
+    // Only add other filter parameters if they exist
+    if (hasOtherFilters) {
+      if (newFilters.especialidades.length > 0) {
+        apiFilters.specialties = mapNamesToIds.especialidades(newFilters.especialidades);
+      }
+
+      if (newFilters.habilidades.length > 0) {
+        apiFilters.skills = mapNamesToIds.habilidades(newFilters.habilidades);
+      }
+
+      if (newFilters.industria.length > 0) {
+        const industryId = mapNamesToIds.industria(newFilters.industria);
+        if (industryId) {
+          apiFilters.industry = industryId;
+        }
+      }
+
+      // Note: tipoProyecto maps to category in the API
+      if (newFilters.tipoProyecto.length > 0) {
+        const categoryIds = mapNamesToIds.tipoProyecto(newFilters.tipoProyecto);
+        if (categoryIds.length > 0) {
+          apiFilters.category = categoryIds[0]; // API expects single category
+        }
+      }
+    }
+
+    setCurrentFilters(apiFilters);
+  };
+
+  const removeFilter = (category: keyof FilterState, filter: string) => {
+    const newFilters = {
+      ...appliedFilters,
+      [category]: appliedFilters[category].filter((f) => f !== filter),
+    };
+    applyFilters(newFilters);
+  };
 
   const hasAppliedFilters = () => {
-    return Object.values(appliedFilters).some((filters) => filters.length > 0)
-  }
+    return Object.values(appliedFilters).some((filters) => filters.length > 0);
+  };
+
+  // Helper function to generate company avatar
+  const getCompanyAvatar = (project: any) => {
+    if (project.company?.logo) {
+      return {
+        type: "image",
+        src: project.company.logo,
+        alt: project.company.name || "Company",
+      };
+    }
+
+    // Generate initials or use default based on company name
+    const companyName = project.company?.name || "Unknown";
+    if (companyName.toLowerCase() === "uber") {
+      return { type: "text", content: "uber", bgColor: "bg-black" };
+    }
+
+    // Generate from first letter of company name
+    const firstLetter = companyName.charAt(0).toUpperCase();
+    const colors = [
+      "bg-purple-500",
+      "bg-blue-600",
+      "bg-green-600",
+      "bg-red-500",
+      "bg-yellow-500",
+    ];
+    const colorIndex = companyName.length % colors.length;
+
+    return {
+      type: "text",
+      content: firstLetter,
+      bgColor: colors[colorIndex],
+    };
+  };
+
+  // Handle load more functionality
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      loadMore();
+    }
+  };
 
   if (selectedProject) {
-    return <ProjectDetail projectId={selectedProject} onBack={() => setSelectedProject(null)} />
+    return (
+      <ProjectDetail
+        projectId={selectedProject}
+        onBack={() => setSelectedProject(null)}
+      />
+    );
+  }
+
+  // Show error state if there's an error
+  if (error && !loading && projects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="text-red-600 mb-4">
+            <X className="w-12 h-12 mx-auto" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Error al cargar proyectos
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Reintentar</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -101,7 +239,9 @@ export default function ProjectListing() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MobileNav />
-              <h1 className="text-lg md:text-xl font-semibold text-gray-900 hidden md:block">Buscar Proyectos</h1>
+              <h1 className="text-lg md:text-xl font-semibold text-gray-900 hidden md:block">
+                Buscar Proyectos
+              </h1>
             </div>
             <div className="flex items-center gap-3">
               <MessageCircle className="w-5 h-5 text-gray-600 cursor-pointer hover:text-gray-800" />
@@ -146,10 +286,16 @@ export default function ProjectListing() {
           {hasAppliedFilters() && (
             <div className="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium text-green-800">Filtros aplicados</h3>
-                <button onClick={() => setShowAppliedFilters(!showAppliedFilters)}>
+                <h3 className="font-medium text-green-800">
+                  Filtros aplicados
+                </h3>
+                <button
+                  onClick={() => setShowAppliedFilters(!showAppliedFilters)}
+                >
                   <ChevronRight
-                    className={`w-4 h-4 text-green-600 transition-transform ${showAppliedFilters ? "rotate-90" : ""}`}
+                    className={`w-4 h-4 text-green-600 transition-transform ${
+                      showAppliedFilters ? "rotate-90" : ""
+                    }`}
                   />
                 </button>
               </div>
@@ -158,7 +304,9 @@ export default function ProjectListing() {
                 <div className="space-y-3">
                   {appliedFilters.especialidades.length > 0 && (
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">Especialidades:</span>
+                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">
+                        Especialidades:
+                      </span>
                       <div className="flex flex-wrap gap-2">
                         {appliedFilters.especialidades.map((filter, index) => (
                           <Badge
@@ -168,7 +316,9 @@ export default function ProjectListing() {
                           >
                             {filter}
                             <button
-                              onClick={() => removeFilter("especialidades", filter)}
+                              onClick={() =>
+                                removeFilter("especialidades", filter)
+                              }
                               className="hover:bg-gray-200 rounded"
                             >
                               <X className="w-3 h-3 text-gray-500" />
@@ -181,7 +331,9 @@ export default function ProjectListing() {
 
                   {appliedFilters.habilidades.length > 0 && (
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">Habilidades:</span>
+                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">
+                        Habilidades:
+                      </span>
                       <div className="flex flex-wrap gap-2">
                         {appliedFilters.habilidades.map((filter, index) => (
                           <Badge
@@ -192,7 +344,9 @@ export default function ProjectListing() {
                             {filter}
                             <span className="text-gray-400">y</span>
                             <button
-                              onClick={() => removeFilter("habilidades", filter)}
+                              onClick={() =>
+                                removeFilter("habilidades", filter)
+                              }
                               className="hover:bg-gray-200 rounded"
                             >
                               <X className="w-3 h-3 text-gray-500" />
@@ -205,7 +359,9 @@ export default function ProjectListing() {
 
                   {appliedFilters.tipoProyecto.length > 0 && (
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">Tipo de proyecto:</span>
+                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">
+                        Tipo de proyecto:
+                      </span>
                       <div className="flex flex-wrap gap-2">
                         {appliedFilters.tipoProyecto.map((filter, index) => (
                           <Badge
@@ -215,7 +371,9 @@ export default function ProjectListing() {
                           >
                             {filter}
                             <button
-                              onClick={() => removeFilter("tipoProyecto", filter)}
+                              onClick={() =>
+                                removeFilter("tipoProyecto", filter)
+                              }
                               className="hover:bg-gray-200 rounded"
                             >
                               <X className="w-3 h-3 text-gray-500" />
@@ -250,98 +408,205 @@ export default function ProjectListing() {
 
           {/* Project List */}
           <div className="space-y-4">
-            {projects.map((project, index) => (
-              <Card
-                key={project.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 shadow-sm"
-                onClick={() => setSelectedProject(project.id)}
-                style={{
-                  transitionDelay: `${index * 200}ms`,
-                  animation: isLoaded ? `fadeIn 0.5s ease-out ${index * 200 + 1000}ms both` : "none",
-                }}
-              >
-                <CardContent className="p-0">
-                  <div className="flex h-full">
-                    {/* Left Section - 95% width containing all project information */}
-                    <div className="w-[95%] p-4 md:p-6">
-                      <div className="flex items-start gap-4">
-                        {/* Project Icon */}
-                        <div className="flex-shrink-0">
-                          <div
-                            className={`w-14 h-14 ${
-                              project.bgColor
-                            } rounded-md flex items-center justify-center text-white font-bold text-xl`}
-                          >
-                            {project.icon === "uber" ? (
-                              <span className="text-sm font-bold">uber</span>
-                            ) : project.icon === "🍃" ? (
-                              <span className="text-2xl">🍃</span>
-                            ) : (
-                              project.icon
-                            )}
+            {/* Loading state for initial load */}
+            {loading && projects.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                <span className="ml-2 text-gray-600">
+                  Cargando proyectos...
+                </span>
+              </div>
+            ) : (
+              <>
+                {(projects || []).map((project, index) => {
+                  const avatar = getCompanyAvatar(project);
+                  const hasApplied = isAppliedToProject(project.id);
+
+                  return (
+                    <Card
+                      key={project.id}
+                      className="hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 shadow-sm"
+                      onClick={() => setSelectedProject(project.id)}
+                      style={{
+                        transitionDelay: `${index * 200}ms`,
+                        animation: isLoaded
+                          ? `fadeIn 0.5s ease-out ${index * 200 + 1000}ms both`
+                          : "none",
+                      }}
+                    >
+                      <CardContent className="p-0">
+                        <div className="flex h-full">
+                          {/* Left Section - 95% width containing all project information */}
+                          <div className="w-[95%] p-4 md:p-6">
+                            <div className="flex items-start gap-4">
+                              {/* Project Icon */}
+                              <div className="flex-shrink-0">
+                                <div
+                                  className={`w-14 h-14 ${
+                                    avatar.bgColor || "bg-gray-500"
+                                  } rounded-md flex items-center justify-center text-white font-bold text-xl`}
+                                >
+                                  {avatar.type === "image" ? (
+                                    <Image
+                                      src="/images/shakers-logo.png"
+                                      alt={avatar.alt!}
+                                      width={56}
+                                      height={56}
+                                      className="rounded-md"
+                                    />
+                                  ) : (
+                                    <span
+                                      className={
+                                        avatar.content === "uber"
+                                          ? "text-sm"
+                                          : "text-xl"
+                                      }
+                                    >
+                                      {avatar.content}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-xs text-gray-500 font-medium mt-1 block text-center">
+                                  {project.company?.name || "Company"}
+                                </span>
+                              </div>
+
+                              {/* Project Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start gap-2 mb-1">
+                                  <h3 className="text-base font-semibold text-gray-900 line-clamp-2 flex-1">
+                                    {project.title}
+                                  </h3>
+                                  {hasApplied && (
+                                    <Badge className="bg-green-100 text-green-800 text-xs px-2 py-0.5 ml-2 flex-shrink-0">
+                                      Aplicado
+                                    </Badge>
+                                  )}
+                                </div>
+
+                                <p className="text-xs text-green-600 mb-2">
+                                  {project.specialty?.name ||
+                                    project.description}
+                                  {project.price && (
+                                    <>
+                                      {" | "}
+                                      <Euro className="w-3 h-3 inline" />{" "}
+                                      {project.price}
+                                    </>
+                                  )}
+                                </p>
+
+                                {project.hours && (
+                                  <p className="text-xs text-green-600 mb-3 flex items-center">
+                                    <Clock className="w-3 h-3 mr-1 text-green-600" />{" "}
+                                    {project.hours}
+                                  </p>
+                                )}
+
+                                {/* Skills */}
+                                <div className="flex flex-wrap gap-1 md:gap-2">
+                                  {(project.skills || [])
+                                    .slice(0, 4)
+                                    .map((skill, skillIndex) => (
+                                      <Badge
+                                        key={skillIndex}
+                                        variant="secondary"
+                                        className="text-[10px] md:text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-0.5"
+                                      >
+                                        {skill.name}
+                                      </Badge>
+                                    ))}
+                                  {(project.skills || []).length > 4 && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] md:text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-0.5"
+                                    >
+                                      +{(project.skills || []).length - 4}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-xs text-gray-500 font-medium mt-1 block text-center">
-                            {project.company}
-                          </span>
-                        </div>
 
-                        {/* Project Details */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">{project.title}</h3>
-                          <p className="text-xs text-green-600 mb-2">
-                            {project.description} | <Euro className="w-3 h-3 inline" /> {project.price}
-                          </p>
-                          <p className="text-xs text-green-600 mb-3 flex items-center">
-                            <Clock className="w-3 h-3 mr-1 text-green-600" /> {project.hours}
-                          </p>
-
-                          {/* Skills */}
-                          <div className="flex flex-wrap gap-1 md:gap-2">
-                            {project.skills.slice(0, 4).map((skill, skillIndex) => (
-                              <Badge
-                                key={skillIndex}
-                                variant="secondary"
-                                className="text-[10px] md:text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-0.5"
-                              >
-                                {skill}
-                              </Badge>
-                            ))}
-                            {project.skills.length > 4 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-[10px] md:text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-2 py-0.5"
-                              >
-                                +{project.skills.length - 4}
-                              </Badge>
-                            )}
+                          {/* Right Section - 5% width containing only the arrow icon */}
+                          <div className="w-[5%] border-l border-gray-200 flex items-center justify-center min-h-[120px] hidden sm:flex">
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="text-gray-900"
+                            >
+                              <path
+                                d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z"
+                                fill="currentColor"
+                              />
+                            </svg>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
 
-                    {/* Right Section - 5% width containing only the arrow icon */}
-                    <div className="w-[5%] border-l border-gray-200 flex items-center justify-center min-h-[120px] hidden sm:flex">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="text-gray-900"
-                      >
-                        <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" fill="currentColor" />
-                      </svg>
-                    </div>
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="text-center pt-6">
+                    <Button
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                      variant="outline"
+                      className="min-w-[150px]"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Cargando...
+                        </>
+                      ) : (
+                        "Cargar más proyectos"
+                      )}
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                )}
+
+                {/* No more projects message */}
+                {!hasMore && projects.length > 0 && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No hay más proyectos para mostrar
+                  </div>
+                )}
+
+                {/* No projects found */}
+                {!loading && projects.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <Filter className="w-16 h-16 mx-auto" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No se encontraron proyectos
+                    </h3>
+                    <p className="text-gray-600">
+                      Intenta ajustar tus filtros de búsqueda
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Filter Modal */}
-      {showFilter && <FilterModal onClose={() => setShowFilter(false)} />}
+      {showFilter && (
+        <FilterModal
+          onClose={() => setShowFilter(false)}
+          onApplyFilters={applyFilters}
+          currentFilters={appliedFilters}
+        />
+      )}
     </div>
-  )
+  );
 }
