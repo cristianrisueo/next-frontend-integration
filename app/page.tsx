@@ -1,5 +1,5 @@
-import ProjectListing from "@/components/project-listing"
+import ProjectListing from "@/components/project-listing";
 
 export default function Home() {
-  return <ProjectListing />
+  return <ProjectListing />;
 }

@@ -77,27 +77,27 @@ export default function ProjectListing() {
   // Helper functions to convert filter names to IDs using catalog data
   const mapNamesToIds = {
     especialidades: (names: string[]): string[] => {
-      return names.map(name => {
-        const item = catalogData.specialties.find(s => s.name === name);
+      return names.map((name) => {
+        const item = catalogData.specialties.find((s) => s.name === name);
         return item?.id || name; // Fallback to name if ID not found
       });
     },
     habilidades: (names: string[]): string[] => {
-      return names.map(name => {
-        const item = catalogData.skills.find(s => s.name === name);
+      return names.map((name) => {
+        const item = catalogData.skills.find((s) => s.name === name);
         return item?.id || name; // Fallback to name if ID not found
       });
     },
     tipoProyecto: (names: string[]): string[] => {
-      return names.map(name => {
-        const item = catalogData.categories.find(c => c.name === name);
+      return names.map((name) => {
+        const item = catalogData.categories.find((c) => c.name === name);
         return item?.id || name; // Fallback to name if ID not found
       });
     },
     industria: (names: string[]): string => {
-      if (names.length === 0) return '';
+      if (names.length === 0) return "";
       const name = names[0]; // API expects single industry
-      const item = catalogData.industries.find(i => i.name === name);
+      const item = catalogData.industries.find((i) => i.name === name);
       return item?.id || name; // Fallback to name if ID not found
     },
   };
@@ -107,25 +107,28 @@ export default function ProjectListing() {
     setAppliedFilters(newFilters);
 
     // Always create base API filters with sort
-    const sortBy = newFilters.sortBy || 'recent'; // Default to 'recent' if undefined
+    const sortBy = newFilters.sortBy || "recent"; // Default to 'recent' if undefined
     const apiFilters: ProjectFilters = {
       status: "PUBLISHED",
       page: 1,
       limit: 10,
-      sortBy: 'publishedAt', // Always sort by publication date
-      order: sortBy === 'recent' ? 'desc' : 'asc', // Always include order
+      sortBy: "publishedAt", // Always sort by publication date
+      order: sortBy === "recent" ? "desc" : "asc", // Always include order
     };
 
     // Check if any other filters are actually applied
-    const hasOtherFilters = newFilters.especialidades.length > 0 ||
-                           newFilters.habilidades.length > 0 ||
-                           newFilters.industria.length > 0 ||
-                           newFilters.tipoProyecto.length > 0;
+    const hasOtherFilters =
+      newFilters.especialidades.length > 0 ||
+      newFilters.habilidades.length > 0 ||
+      newFilters.industria.length > 0 ||
+      newFilters.tipoProyecto.length > 0;
 
     // Only add other filter parameters if they exist
     if (hasOtherFilters) {
       if (newFilters.especialidades.length > 0) {
-        apiFilters.specialties = mapNamesToIds.especialidades(newFilters.especialidades);
+        apiFilters.specialties = mapNamesToIds.especialidades(
+          newFilters.especialidades
+        );
       }
 
       if (newFilters.habilidades.length > 0) {
@@ -152,15 +155,30 @@ export default function ProjectListing() {
   };
 
   const removeFilter = (category: keyof FilterState, filter: string) => {
-    const newFilters = {
-      ...appliedFilters,
-      [category]: appliedFilters[category].filter((f) => f !== filter),
-    };
+    const newFilters = { ...appliedFilters };
+
+    if (category === "sortBy") {
+      // sortBy is a string, not an array, so we can't remove individual items
+      return;
+    }
+
+    // For array properties, filter out the specified item
+    if (Array.isArray(newFilters[category])) {
+      (newFilters[category] as string[]) = (
+        appliedFilters[category] as string[]
+      ).filter((f) => f !== filter);
+    }
+
     applyFilters(newFilters);
   };
 
   const hasAppliedFilters = () => {
-    return Object.values(appliedFilters).some((filters) => filters.length > 0);
+    return (
+      appliedFilters.especialidades.length > 0 ||
+      appliedFilters.habilidades.length > 0 ||
+      appliedFilters.tipoProyecto.length > 0 ||
+      appliedFilters.industria.length > 0
+    );
   };
 
   // Helper function to generate company avatar
@@ -342,7 +360,6 @@ export default function ProjectListing() {
                             className="bg-gray-100 border border-gray-200 text-gray-700 gap-2 px-3 py-1"
                           >
                             {filter}
-                            <span className="text-gray-400">y</span>
                             <button
                               onClick={() =>
                                 removeFilter("habilidades", filter)
@@ -373,6 +390,33 @@ export default function ProjectListing() {
                             <button
                               onClick={() =>
                                 removeFilter("tipoProyecto", filter)
+                              }
+                              className="hover:bg-gray-200 rounded"
+                            >
+                              <X className="w-3 h-3 text-gray-500" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {appliedFilters.industria.length > 0 && (
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+                      <span className="text-sm font-medium text-gray-700 min-w-[100px]">
+                        Industria:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {appliedFilters.industria.map((filter, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="bg-gray-100 border border-gray-200 text-gray-700 gap-2 px-3 py-1"
+                          >
+                            {filter}
+                            <button
+                              onClick={() =>
+                                removeFilter("industria", filter)
                               }
                               className="hover:bg-gray-200 rounded"
                             >

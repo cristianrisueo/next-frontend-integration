@@ -25,6 +25,7 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
   const [isMobile, setIsMobile] = useState(false)
   
   // Dropdown states
+  const [specialtiesInput, setSpecialtiesInput] = useState('')
   const [skillsInput, setSkillsInput] = useState('')
   const [projectTypeInput, setProjectTypeInput] = useState('')
   const [industryInput, setIndustryInput] = useState('')
@@ -89,6 +90,13 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
   }
   
   // Filter suggestion functions
+  const getFilteredSpecialties = () => {
+    if (!specialtiesInput.trim()) return catalogData.specialties
+    return catalogData.specialties.filter(specialty => 
+      specialty.name.toLowerCase().includes(specialtiesInput.toLowerCase())
+    ).slice(0, 10)
+  }
+  
   const getFilteredSkills = () => {
     if (!skillsInput.trim()) return catalogData.skills
     return catalogData.skills.filter(skill => 
@@ -152,8 +160,17 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
                     )}
                   </div>
                 </div>
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar especialidades..."
+                    value={specialtiesInput}
+                    onChange={(e) => setSpecialtiesInput(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md text-gray-700"
+                  />
+                </div>
                 <div className="max-h-32 overflow-y-auto border rounded-md">
-                  {catalogData.specialties.map((specialty) => (
+                  {getFilteredSpecialties().map((specialty) => (
                     <button
                       key={specialty.id}
                       onClick={() => addFilter('especialidades', specialty.name)}
@@ -409,8 +426,17 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
                     )}
                   </div>
                 </div>
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    placeholder="Buscar especialidades..."
+                    value={specialtiesInput}
+                    onChange={(e) => setSpecialtiesInput(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm"
+                  />
+                </div>
                 <div className="max-h-32 overflow-y-auto border rounded-md">
-                  {catalogData.specialties.map((specialty) => (
+                  {getFilteredSpecialties().map((specialty) => (
                     <button
                       key={specialty.id}
                       onClick={() => addFilter('especialidades', specialty.name)}

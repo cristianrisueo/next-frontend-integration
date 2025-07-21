@@ -6,9 +6,12 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Buscar Proyectos",
+  title: "Shakers - Reinventing work",
   description: "Plataforma para buscar proyectos freelance",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/images/shakers-favicon.webp',
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
