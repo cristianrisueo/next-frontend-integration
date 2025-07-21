@@ -1,103 +1,121 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, Calendar, Clock, Euro, Users, ChevronDown, MessageCircle, Bell, Loader2 } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
-import Image from "next/image"
-import MobileNav from "./mobile-nav"
-import { useProject } from "@/lib/hooks/useProjects"
-import { useApplications } from "@/lib/hooks/useApplications"
-import { Badge } from "@/components/ui/badge"
-import FloatingNotification from "./floating-notification"
+import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft,
+  Calendar,
+  Clock,
+  Euro,
+  Users,
+  ChevronDown,
+  MessageCircle,
+  Bell,
+  Loader2,
+} from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
+import MobileNav from "./mobile-nav";
+import { useProject } from "@/lib/hooks/useProjects";
+import { useApplications } from "@/lib/hooks/useApplications";
+import { Badge } from "@/components/ui/badge";
+import FloatingNotification from "./floating-notification";
 
 interface ProjectDetailProps {
-  projectId: string
-  onBack: () => void
+  projectId: string;
+  onBack: () => void;
 }
 
-export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps) {
+export default function ProjectDetail({
+  projectId,
+  onBack,
+}: ProjectDetailProps) {
   // Use hooks to fetch project data and manage applications
-  const { project, loading, error } = useProject(projectId)
-  const { applyToProject, withdrawApplication, isAppliedToProject, isProcessing } = useApplications()
-  
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(2)
+  const { project, loading, error } = useProject(projectId);
+  const {
+    applyToProject,
+    withdrawApplication,
+    isAppliedToProject,
+    isProcessing,
+  } = useApplications();
+
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(2);
   const [notification, setNotification] = useState<{
-    message: string
-    type: 'success' | 'error'
-  } | null>(null)
-  
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
   // Cleanup function for timeouts
   useEffect(() => {
     return () => {
-      setNotification(null)
-    }
-  }, [])
-  
+      setNotification(null);
+    };
+  }, []);
+
   // Check if user has applied to this project - use useMemo for reactivity
   const hasApplied = useMemo(() => {
-    return project ? isAppliedToProject(project.id) : false
-  }, [project, isAppliedToProject])
-  
+    return project ? isAppliedToProject(project.id) : false;
+  }, [project, isAppliedToProject]);
+
   // Handle application/withdrawal
   const handleApplicationToggle = async () => {
-    if (!project) return
-    
+    if (!project) return;
+
     // Clear any previous notifications
-    setNotification(null)
-    
+    setNotification(null);
+
     if (hasApplied) {
-      const success = await withdrawApplication(project.id)
+      const success = await withdrawApplication(project.id);
       if (success) {
         setNotification({
-          message: 'Candidatura retirada con éxito',
-          type: 'success'
-        })
+          message: "Candidatura retirada con éxito",
+          type: "success",
+        });
       } else {
         setNotification({
-          message: 'Error al retirar la candidatura. Inténtalo de nuevo.',
-          type: 'error'
-        })
+          message: "Error al retirar la candidatura. Inténtalo de nuevo.",
+          type: "error",
+        });
       }
     } else {
-      const success = await applyToProject(project.id)
+      const success = await applyToProject(project.id);
       if (success) {
         setNotification({
-          message: '¡Aplicación enviada con éxito!',
-          type: 'success'
-        })
+          message: "¡Aplicación enviada con éxito!",
+          type: "success",
+        });
       } else {
         setNotification({
-          message: 'Error al enviar la aplicación. Inténtalo de nuevo.',
-          type: 'error'
-        })
+          message: "Error al enviar la aplicación. Inténtalo de nuevo.",
+          type: "error",
+        });
       }
     }
-  }
-  
+  };
+
   // Helper function to format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No especificado'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
-  
+    if (!dateString) return "No especificado";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   // Helper function to format budget
   const formatBudget = (budget?: number) => {
-    if (!budget) return 'No especificado'
-    return `${budget.toLocaleString('es-ES')} €`
-  }
+    if (!budget) return "No especificado";
+    return `${budget.toLocaleString("es-ES")} €`;
+  };
 
   const faqs = [
     "¿Es posible utilizar nuestra plataforma para formar un equipo completo desde el inicio?",
     "¿Es posible utilizar nuestra plataforma para formar un equipo completo desde el inicio?",
     "¿Qué sucede si necesito reemplazar a un freelance durante el desarrollo del proyecto?",
     "¿Cómo se gestionará la facturación del proyecto?",
-  ]
-  
+  ];
+
   // Loading state
   if (loading) {
     return (
@@ -107,9 +125,9 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
           <span className="ml-2 text-gray-600">Cargando proyecto...</span>
         </div>
       </div>
-    )
+    );
   }
-  
+
   // Error state
   if (error || !project) {
     return (
@@ -118,12 +136,16 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
           <div className="text-red-600 mb-4">
             <ChevronLeft className="w-12 h-12 mx-auto" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error al cargar el proyecto</h2>
-          <p className="text-gray-600 mb-4">{error || 'Proyecto no encontrado'}</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Error al cargar el proyecto
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {error || "Proyecto no encontrado"}
+          </p>
           <Button onClick={onBack}>Volver atrás</Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -135,7 +157,9 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
             <div className="flex items-center gap-2">
               <MobileNav />
               <div className="hidden md:flex items-center gap-4">
-                <h1 className="text-xl font-semibold text-gray-900">Buscar Proyectos</h1>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Buscar Proyectos
+                </h1>
                 <span className="text-gray-400">Buscar Proyectos</span>
               </div>
             </div>
@@ -155,10 +179,12 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
       </div>
 
       <div className="w-[95%] mx-auto px-4 py-4 md:py-6">
-
         {/* Breadcrumb - Hide on mobile */}
         <div className="hidden md:flex items-center gap-2 mb-6 text-sm text-gray-600">
-          <button onClick={onBack} className="flex items-center gap-1 hover:text-gray-900">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 hover:text-gray-900"
+          >
             <ChevronLeft className="w-4 h-4" />
             Atrás
           </button>
@@ -170,7 +196,10 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
 
         {/* Mobile Back Button */}
         <div className="md:hidden mb-4">
-          <button onClick={onBack} className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+          >
             <ChevronLeft className="w-5 h-5" />
             <span>Atrás</span>
           </button>
@@ -180,13 +209,19 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
         <div className="bg-green-800 text-white rounded-lg p-4 md:p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold mb-2">{project.title}</h1>
-              <p className="text-green-100 mb-4">{project.specialty?.name || 'Especialidad'}</p>
+              <h1 className="text-xl md:text-2xl font-bold mb-2">
+                {project.title}
+              </h1>
+              <p className="text-green-100 mb-4">
+                {project.specialty?.name || "Especialidad"}
+              </p>
 
               <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-4 text-sm">
                 <div className="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1 rounded">
                   <Calendar className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">Inicio: {formatDate(project.startDate)}</span>
+                  <span className="text-xs md:text-sm">
+                    Inicio: {formatDate(project.startDate)}
+                  </span>
                 </div>
                 {project.hours && (
                   <div className="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1 rounded">
@@ -196,12 +231,16 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
                 )}
                 <div className="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1 rounded">
                   <Euro className="w-4 h-4" />
-                  <span className="text-xs md:text-sm">{formatBudget(project.estimatedBudget)} (Estimado)</span>
+                  <span className="text-xs md:text-sm">
+                    {formatBudget(project.estimatedBudget)} (Estimado)
+                  </span>
                 </div>
                 {project.requiredTalents && (
                   <div className="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1 rounded">
                     <Users className="w-4 h-4" />
-                    <span className="text-xs md:text-sm">{project.requiredTalents} Talentos</span>
+                    <span className="text-xs md:text-sm">
+                      {project.requiredTalents} Talentos
+                    </span>
                   </div>
                 )}
               </div>
@@ -216,9 +255,12 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
 
         {/* Project Description */}
         <div className="bg-white rounded-lg p-4 md:p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Descripción del Proyecto</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            Descripción del Proyecto
+          </h2>
           <div className="text-sm md:text-base text-gray-700 mb-6">
-            {project.description || 'No hay descripción disponible para este proyecto.'}
+            {project.description ||
+              "No hay descripción disponible para este proyecto."}
           </div>
 
           {/* Skills Required */}
@@ -234,7 +276,7 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
               </div>
             </div>
           )}
-          
+
           {/* Industry and Category */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             {project.industry && (
@@ -260,12 +302,16 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
               <div
                 key={index}
                 className={`border-b border-gray-200 transition-colors ${
-                  expandedFaq === index ? "bg-green-50" : "bg-white hover:bg-gray-50"
+                  expandedFaq === index
+                    ? "bg-green-50"
+                    : "bg-white hover:bg-gray-50"
                 }`}
               >
                 <button
                   className="flex items-center justify-between w-full text-left p-4"
-                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                  onClick={() =>
+                    setExpandedFaq(expandedFaq === index ? null : index)
+                  }
                 >
                   <span className="text-sm text-gray-700 pr-4">{faq}</span>
                   <ChevronDown
@@ -276,8 +322,9 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
                 </button>
                 {expandedFaq === index && (
                   <div className="px-4 pb-4 text-sm text-gray-600">
-                    Aquí se incluirá información adicional sobre el proyecto y sus características. También se puede
-                    modificar para incluir contenido relevante en otros contextos.
+                    Aquí se incluirá información adicional sobre el proyecto y
+                    sus características. También se puede modificar para incluir
+                    contenido relevante en otros contextos.
                   </div>
                 )}
               </div>
@@ -286,15 +333,17 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
         </div>
 
         {/* Team Section */}
-        <div className="space-y-6 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
-          {/* Responsable Section - Now on left, 1/3 width on desktop */}
-          <div className="bg-white rounded-lg p-4 md:p-6 md:col-span-1">
+        <div className="space-y-6 md:flex md:gap-6 md:space-y-0 md:items-start">
+          {/* Responsable Section - Fits content width on desktop */}
+          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-1/1">
             <h3 className="font-semibold mb-4">Responsable</h3>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-gray-600 rounded text-white flex items-center justify-center text-sm font-bold">
-                {project.company?.name?.charAt(0).toUpperCase() || 'C'}
+                {project.company?.name?.charAt(0).toUpperCase() || "C"}
               </div>
-              <span className="font-medium">{project.company?.name || 'Empresa'}</span>
+              <span className="font-medium">
+                {project.company?.name || "Empresa"}
+              </span>
             </div>
             <div className="space-y-3">
               <Image
@@ -311,15 +360,21 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
             </div>
           </div>
 
-          {/* Equipo Section - Now on right, 2/3 width on desktop */}
-          <div className="bg-white rounded-lg p-4 md:p-6 md:col-span-2">
+          {/* Equipo Section - Fits content width on desktop */}
+          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-auto">
             <h3 className="font-semibold mb-4">Equipo</h3>
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">{project.specialty?.name || 'Desarrollador'}</h4>
+                <h4 className="font-medium text-gray-900 mb-2">
+                  {project.specialty?.name || "Desarrollador"}
+                </h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  {project.skills.slice(0, 4).map(skill => skill.name).join(', ')}
-                  {project.skills.length > 4 && ` y ${project.skills.length - 4} más`}
+                  {project.skills
+                    .slice(0, 4)
+                    .map((skill) => skill.name)
+                    .join(", ")}
+                  {project.skills.length > 4 &&
+                    ` y ${project.skills.length - 4} más`}
                 </p>
               </div>
 
@@ -336,7 +391,7 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
                       Procesando...
                     </>
                   ) : (
-                    'Retirar Candidatura'
+                    "Retirar Candidatura"
                   )}
                 </Button>
               ) : (
@@ -351,7 +406,7 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
                       Aplicando...
                     </>
                   ) : (
-                    'Aplicar'
+                    "Aplicar"
                   )}
                 </Button>
               )}
@@ -363,10 +418,10 @@ export default function ProjectDetail({ projectId, onBack }: ProjectDetailProps)
       {/* Floating Notification */}
       <FloatingNotification
         message={notification?.message || null}
-        type={notification?.type || 'success'}
-        duration={notification?.type === 'error' ? 5000 : 4000}
+        type={notification?.type || "success"}
+        duration={notification?.type === "error" ? 5000 : 4000}
         onClose={() => setNotification(null)}
       />
     </div>
-  )
+  );
 }
