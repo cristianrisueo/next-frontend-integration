@@ -334,34 +334,8 @@ export default function ProjectDetail({
 
         {/* Team Section */}
         <div className="space-y-6 md:flex md:gap-6 md:space-y-0 md:items-start">
-          {/* Responsable Section - Fits content width on desktop */}
-          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-1/1">
-            <h3 className="font-semibold mb-4">Responsable</h3>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-gray-600 rounded text-white flex items-center justify-center text-sm font-bold">
-                {project.company?.name?.charAt(0).toUpperCase() || "C"}
-              </div>
-              <span className="font-medium">
-                {project.company?.name || "Empresa"}
-              </span>
-            </div>
-            <div className="space-y-3">
-              <Image
-                src="/images/martina-garcia.png"
-                alt="Martina Garcia"
-                width={128}
-                height={160}
-                className="object-cover rounded-lg w-full max-w-[128px]"
-              />
-              <div>
-                <h4 className="font-semibold text-gray-900">Martina Garcia</h4>
-                <p className="text-sm text-gray-600">Project Owner</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Equipo Section - Fits content width on desktop */}
-          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-auto">
+          {/* Equipo Section - Shows first on mobile, second on desktop */}
+          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-auto order-1 md:order-2">
             <h3 className="font-semibold mb-4">Equipo</h3>
             <div className="space-y-4">
               <div>
@@ -410,6 +384,32 @@ export default function ProjectDetail({
                   )}
                 </Button>
               )}
+            </div>
+          </div>
+
+          {/* Responsable Section - Shows second on mobile, first on desktop */}
+          <div className="bg-white rounded-lg p-4 md:p-6 md:flex-shrink-0 md:w-1/1 order-2 md:order-1">
+            <h3 className="font-semibold mb-4">Responsable</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gray-600 rounded text-white flex items-center justify-center text-sm font-bold">
+                {project.company?.name?.charAt(0).toUpperCase() || "C"}
+              </div>
+              <span className="font-medium">
+                {project.company?.name || "Empresa"}
+              </span>
+            </div>
+            <div className="space-y-3 md:text-left">
+              <Image
+                src="/images/martina-garcia.png"
+                alt="Martina Garcia"
+                width={128}
+                height={160}
+                className="object-cover rounded-lg w-full max-w-[160px] md:max-w-[200px] mx-auto md:mx-0"
+              />
+              <div>
+                <h4 className="font-semibold text-gray-900">Martina Garcia</h4>
+                <p className="text-sm text-gray-600">Project Owner</p>
+              </div>
             </div>
           </div>
         </div>
