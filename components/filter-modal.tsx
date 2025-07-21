@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import { X, ChevronDown, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useCatalog } from "@/lib/hooks/useCatalog"
 import { FilterState, SortOption } from "@/types/filters"

@@ -52,7 +52,6 @@ export default function ProjectListing() {
     projects = [],
     loading,
     error,
-    pagination,
     hasMore,
     loadMore,
     updateFilters,
@@ -415,9 +414,7 @@ export default function ProjectListing() {
                           >
                             {filter}
                             <button
-                              onClick={() =>
-                                removeFilter("industria", filter)
-                              }
+                              onClick={() => removeFilter("industria", filter)}
                               className="hover:bg-gray-200 rounded"
                             >
                               <X className="w-3 h-3 text-gray-500" />
@@ -574,7 +571,7 @@ export default function ProjectListing() {
                           </div>
 
                           {/* Right Section - 5% width containing only the arrow icon */}
-                          <div className="w-[5%] border-l border-gray-200 flex items-center justify-center min-h-[120px] hidden sm:flex">
+                          <div className="w-[5%] border-l border-gray-200 items-center justify-center min-h-[120px] hidden sm:flex">
                             <svg
                               width="16"
                               height="16"

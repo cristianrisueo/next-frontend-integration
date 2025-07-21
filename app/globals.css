@@ -78,16 +78,6 @@
   }
 }
 
-@layer utilities {
-  .mobile-container {
-    @apply max-w-sm md:max-w-4xl w-full mx-auto;
-  }
-
-  .container-95 {
-    @apply w-[95%] mx-auto;
-  }
-}
-
 @keyframes slideInBounce {
   0% {
     opacity: 0;

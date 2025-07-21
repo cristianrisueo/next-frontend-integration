@@ -108,15 +108,4 @@ export const projectsService = {
     }
   },
 
-  async createProject(projectData: Partial<Project>): Promise<Project> {
-    return apiClient.post<Project>('/projects', projectData)
-  },
-
-  async updateProject(id: string, projectData: Partial<Project>): Promise<Project> {
-    return apiClient.put<Project>(`/projects/${id}`, projectData)
-  },
-
-  async deleteProject(id: string): Promise<void> {
-    return apiClient.delete<void>(`/projects/${id}`)
-  },
 }

@@ -52,7 +52,7 @@ export interface Application {
   id: string
   userId: string
   projectId: string
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'APPLIED' | 'WITHDRAWN'
   createdAt: string
   updatedAt: string
   project?: Project

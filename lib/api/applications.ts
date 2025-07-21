@@ -32,7 +32,4 @@ export const applicationsService = {
     return apiClient.get<Application[]>('/applications/my')
   },
 
-  async getUserApplications(userId: string = USER_ID): Promise<Application[]> {
-    return apiClient.get<Application[]>(`/users/${userId}/applications`)
-  },
 }

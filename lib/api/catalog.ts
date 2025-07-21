@@ -22,7 +22,4 @@ export const catalogService = {
     return apiClient.get<Subcategory[]>('/subcategories')
   },
 
-  async getSubcategoriesByCategory(categoryId: string): Promise<Subcategory[]> {
-    return apiClient.get<Subcategory[]>(`/categories/${categoryId}/subcategories`)
-  },
 }
