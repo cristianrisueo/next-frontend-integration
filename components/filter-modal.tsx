@@ -127,7 +127,7 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
   if (isMobile) {
     return (
       <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
-        <div className="p-4 pb-16 md:p-6 max-w-sm md:max-w-lg w-full mx-auto">
+        <div className="p-4 pb-32 md:p-6 max-w-sm md:max-w-lg w-full mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Filtrar Proyectos</h2>
@@ -337,7 +337,7 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
           )}
 
           {/* Ordenar por */}
-          <div className="mb-8">
+          <div className="mb-24">
             <h3 className="text-base font-medium mb-3">Ordenar por</h3>
             <div className="space-y-3">
               <label className="flex items-center gap-3 cursor-pointer">
