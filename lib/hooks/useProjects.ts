@@ -100,27 +100,17 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
    * Resetea a la primera página cuando cambian los filtros
    */
   const updateFilters = useCallback((newFilters: Partial<ProjectFilters>) => {
-    // Si solo se proporcionan propiedades básicas, resetea filtros completamente
-    const hasSearchFilters = newFilters.specialties || newFilters.skills || 
-                             newFilters.industry || newFilters.category || 
-                             newFilters.subcategory || newFilters.q;
-    
-    if (!hasSearchFilters) {
-      setFilters({
-        status: newFilters.status || 'PUBLISHED',
-        page: 1,
-        limit: newFilters.limit || 10,
-        // Siempre preserva parámetros de ordenamiento incluso sin filtros de búsqueda
-        sortBy: newFilters.sortBy,
-        order: newFilters.order,
-      })
-    } else {
-      setFilters(prev => ({
-        ...prev,
-        ...newFilters,
-        page: 1, // Resetea a primera página cuando cambian los filtros
-      }))
-    }
+    setFilters(prev => ({
+      // Start with base filters only
+      status: 'PUBLISHED',
+      page: 1,
+      limit: 10,
+      sortBy: 'publishedAt',
+      order: 'desc',
+      // Override with new filters (this replaces any old filter properties)
+      ...newFilters,
+      page: 1, // Resetea a primera página cuando cambian los filtros
+    }))
   }, [])
 
   useEffect(() => {

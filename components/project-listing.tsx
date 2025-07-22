@@ -118,7 +118,7 @@ export default function ProjectListing() {
   const applyFilters = (newFilters: FilterState) => {
     setAppliedFilters(newFilters);
 
-    // Always create base API filters with sort
+    // Always create fresh API filters with only base properties
     const sortBy = newFilters.sortBy || "recent"; // Default to 'recent' if undefined
     const apiFilters: ProjectFilters = {
       status: "PUBLISHED",
@@ -128,38 +128,29 @@ export default function ProjectListing() {
       order: sortBy === "recent" ? "desc" : "asc", // Always include order
     };
 
-    // Check if any other filters are actually applied
-    const hasOtherFilters =
-      newFilters.especialidades.length > 0 ||
-      newFilters.habilidades.length > 0 ||
-      newFilters.industria.length > 0 ||
-      newFilters.tipoProyecto.length > 0;
+    // Only add filter parameters if they have values
+    if (newFilters.especialidades.length > 0) {
+      apiFilters.specialties = mapNamesToIds.especialidades(
+        newFilters.especialidades
+      );
+    }
 
-    // Only add other filter parameters if they exist
-    if (hasOtherFilters) {
-      if (newFilters.especialidades.length > 0) {
-        apiFilters.specialties = mapNamesToIds.especialidades(
-          newFilters.especialidades
-        );
+    if (newFilters.habilidades.length > 0) {
+      apiFilters.skills = mapNamesToIds.habilidades(newFilters.habilidades);
+    }
+
+    if (newFilters.industria.length > 0) {
+      const industryId = mapNamesToIds.industria(newFilters.industria);
+      if (industryId) {
+        apiFilters.industry = industryId;
       }
+    }
 
-      if (newFilters.habilidades.length > 0) {
-        apiFilters.skills = mapNamesToIds.habilidades(newFilters.habilidades);
-      }
-
-      if (newFilters.industria.length > 0) {
-        const industryId = mapNamesToIds.industria(newFilters.industria);
-        if (industryId) {
-          apiFilters.industry = industryId;
-        }
-      }
-
-      // Note: tipoProyecto maps to category in the API
-      if (newFilters.tipoProyecto.length > 0) {
-        const categoryIds = mapNamesToIds.tipoProyecto(newFilters.tipoProyecto);
-        if (categoryIds.length > 0) {
-          apiFilters.category = categoryIds[0]; // API expects single category
-        }
+    // Note: tipoProyecto maps to category in the API
+    if (newFilters.tipoProyecto.length > 0) {
+      const categoryIds = mapNamesToIds.tipoProyecto(newFilters.tipoProyecto);
+      if (categoryIds.length > 0) {
+        apiFilters.category = categoryIds[0]; // API expects single category
       }
     }
 
