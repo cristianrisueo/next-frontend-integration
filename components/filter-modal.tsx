@@ -15,16 +15,21 @@ interface FilterModalProps {
   currentFilters: FilterState
 }
 
+/**
+ * Modal de filtros para proyectos freelance
+ * Permite filtrar por especialidades, habilidades, tipo de proyecto, industria y ordenación
+ * Responsive: diseño móvil y desktop diferenciados
+ */
 export default function FilterModal({ onClose, onApplyFilters, currentFilters }: FilterModalProps) {
-  // Load catalog data
+  // Carga datos del catálogo
   const { data: catalogData, loading: catalogLoading } = useCatalog()
   
-  // Local state for filter selections
+  // Estado local para selecciones de filtros
   const [localFilters, setLocalFilters] = useState<FilterState>(currentFilters)
   const [sortBy, setSortBy] = useState<SortOption>(currentFilters.sortBy || "recent")
   const [isMobile, setIsMobile] = useState(false)
   
-  // Dropdown states
+  // Estados para campos de búsqueda en dropdowns
   const [specialtiesInput, setSpecialtiesInput] = useState('')
   const [skillsInput, setSkillsInput] = useState('')
   const [projectTypeInput, setProjectTypeInput] = useState('')
@@ -131,7 +136,7 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
             </button>
           </div>
 
-          {/* Loading state */}
+          {/* Estado de carga */}
           {catalogLoading && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-green-600" />
@@ -397,7 +402,7 @@ export default function FilterModal({ onClose, onApplyFilters, currentFilters }:
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Loading state */}
+          {/* Estado de carga */}
           {catalogLoading && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-green-600" />

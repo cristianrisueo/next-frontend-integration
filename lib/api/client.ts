@@ -1,8 +1,13 @@
 import { ApiError } from '@/types/api'
 import { logApiCall, logApiResponse, logApiError } from '@/lib/utils/debug'
 
+// URL base de la API del backend
 const API_BASE_URL = 'http://localhost:3001'
 
+/**
+ * Cliente HTTP centralizado para realizar peticiones a la API
+ * Maneja errores, headers por defecto y transformación de respuestas
+ */
 class ApiClient {
   private baseURL: string
   private defaultHeaders: HeadersInit
@@ -14,6 +19,10 @@ class ApiClient {
     }
   }
 
+  /**
+   * Método privado para realizar peticiones HTTP
+   * Maneja automáticamente headers, errores y logging
+   */
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -44,18 +53,18 @@ class ApiClient {
         throw error
       }
 
-      // Handle empty responses (common for 201, 204 status codes)
+      // Maneja respuestas vacías (comunes para códigos 201, 204)
       const text = await response.text()
       let data
       
       if (text.trim() === '') {
-        // Empty response - return null or empty object based on expected type
+        // Respuesta vacía - devuelve null u objeto vacío según el tipo esperado
         data = null
       } else {
         try {
           data = JSON.parse(text)
         } catch (jsonError) {
-          // If it's not valid JSON but we have text, return the text
+          // Si no es JSON válido pero tenemos texto, devuelve el texto
           data = text
         }
       }
@@ -76,6 +85,10 @@ class ApiClient {
     }
   }
 
+  /**
+   * Realiza petición GET con parámetros opcionales
+   * Filtra automáticamente valores nulos/indefinidos
+   */
   async get<T>(endpoint: string, params?: Record<string, any>): Promise<T> {
     const searchParams = params ? new URLSearchParams(
       Object.entries(params)
@@ -87,6 +100,9 @@ class ApiClient {
     return this.request<T>(url)
   }
 
+  /**
+   * Realiza petición POST con datos opcionales
+   */
   async post<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
@@ -94,6 +110,9 @@ class ApiClient {
     })
   }
 
+  /**
+   * Realiza petición DELETE
+   */
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'DELETE',

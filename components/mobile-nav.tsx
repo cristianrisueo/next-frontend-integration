@@ -3,6 +3,10 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 
+/**
+ * Componente de navegación móvil
+ * Proporciona un menú hamburguesa con navegación en pantalla completa para dispositivos móviles
+ */
 export default function MobileNav() {
   const [isOpen, setIsOpen] = useState(false)
 

@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { applicationsService } from '@/lib/api/applications'
 import { Application, ApiError } from '@/types/api'
 
+/**
+ * Interfaz del valor de retorno del hook useApplications
+ */
 interface UseApplicationsReturn {
   applications: Application[]
   loading: boolean
@@ -13,12 +16,22 @@ interface UseApplicationsReturn {
   isProcessing: boolean
 }
 
+/**
+ * Hook personalizado para gestionar aplicaciones a proyectos
+ * Maneja la obtención, aplicación y retiro de aplicaciones
+ * 
+ * @returns Objeto con aplicaciones, estados y funciones de control
+ */
 export function useApplications(): UseApplicationsReturn {
+  // Estados del hook
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Obtiene las aplicaciones del usuario desde la API
+   */
   const fetchApplications = useCallback(async () => {
     try {
       setLoading(true)
@@ -38,6 +51,10 @@ export function useApplications(): UseApplicationsReturn {
     fetchApplications()
   }, [fetchApplications])
 
+  /**
+   * Aplica a un proyecto específico
+   * Actualiza optimistamente el estado local y luego revalida desde servidor
+   */
   const applyToProject = useCallback(async (projectId: string): Promise<boolean> => {
     try {
       setIsProcessing(true)
@@ -45,25 +62,25 @@ export function useApplications(): UseApplicationsReturn {
       
       const newApplication = await applicationsService.applyToProject(projectId)
       
-      // Check if there's already an application for this project and update it, or add new one
+      // Verifica si ya existe una aplicación para este proyecto y la actualiza, o añade una nueva
       setApplications(prev => {
         const existingIndex = prev.findIndex(app => app.projectId === projectId)
         if (existingIndex !== -1) {
-          // Update existing application
+          // Actualiza aplicación existente
           const updated = [...prev]
           updated[existingIndex] = newApplication
           return updated
         } else {
-          // Add new application
+          // Añade nueva aplicación
           return [...prev, newApplication]
         }
       })
       
-      // Refresh applications from server to get the real application data
-      // This is important since we might be using a temporary application object
+      // Actualiza aplicaciones desde servidor para obtener datos reales
+      // Esto es importante ya que podríamos estar usando un objeto temporal
       setTimeout(() => {
         fetchApplications()
-      }, 500) // Small delay to allow backend to process
+      }, 500) // Pequeño retraso para permitir que el backend procese
       
       return true
     } catch (err) {
@@ -75,6 +92,10 @@ export function useApplications(): UseApplicationsReturn {
     }
   }, [fetchApplications])
 
+  /**
+   * Retira una aplicación de un proyecto
+   * Actualiza el estado local y luego revalida desde servidor
+   */
   const withdrawApplication = useCallback(async (projectId: string): Promise<boolean> => {
     try {
       setIsProcessing(true)
@@ -82,7 +103,7 @@ export function useApplications(): UseApplicationsReturn {
       
       await applicationsService.withdrawApplication(projectId)
       
-      // Update the existing application status to WITHDRAWN instead of removing it
+      // Actualiza el estado de la aplicación existente a WITHDRAWN en lugar de eliminarla
       setApplications(prev => 
         prev.map(app => 
           app.projectId === projectId 
@@ -91,10 +112,10 @@ export function useApplications(): UseApplicationsReturn {
         )
       )
       
-      // Refresh applications from server to get the real application status
+      // Actualiza aplicaciones desde servidor para obtener el estado real
       setTimeout(() => {
         fetchApplications()
-      }, 500) // Small delay to allow backend to process
+      }, 500) // Pequeño retraso para permitir que el backend procese
       
       return true
     } catch (err) {
@@ -106,6 +127,9 @@ export function useApplications(): UseApplicationsReturn {
     }
   }, [fetchApplications])
 
+  /**
+   * Verifica si el usuario ya ha aplicado a un proyecto específico
+   */
   const isAppliedToProject = useCallback((projectId: string): boolean => {
     return applications.some(app => app.projectId === projectId && app.status === 'APPLIED')
   }, [applications])

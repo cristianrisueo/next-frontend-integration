@@ -25,7 +25,12 @@ import { useCatalog } from "@/lib/hooks/useCatalog";
 import { ProjectFilters } from "@/types/api";
 import { FilterState } from "@/types/filters";
 
+/**
+ * Componente principal para mostrar el listado de proyectos freelance
+ * Incluye funcionalidad de filtrado, paginación y aplicación a proyectos
+ */
 export default function ProjectListing() {
+  // Estados del componente
   const [showFilter, setShowFilter] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
@@ -38,13 +43,13 @@ export default function ProjectListing() {
   const [showAppliedFilters, setShowAppliedFilters] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Initialize with default filters for published projects
+  // Inicializa con filtros por defecto para proyectos publicados
   const [currentFilters, setCurrentFilters] = useState<ProjectFilters>({
     status: "PUBLISHED",
     page: 1,
     limit: 10,
     sortBy: "publishedAt",
-    order: "desc", // Most recent first by default
+    order: "desc", // Los más recientes primero por defecto
   });
 
   // Use custom hooks for data management
@@ -56,7 +61,7 @@ export default function ProjectListing() {
     loadMore,
     updateFilters,
   } = useProjects(currentFilters);
-  const { isAppliedToProject } = useApplications();
+  const { isAppliedToProject, refetch: refetchApplications } = useApplications();
   const { data: catalogData } = useCatalog();
 
   // Update filters when currentFilters change
@@ -73,24 +78,32 @@ export default function ProjectListing() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Refresh applications when component becomes visible again (returning from detail view)
+  useEffect(() => {
+    if (!selectedProject) {
+      // Only refetch when returning to the listing (selectedProject becomes null)
+      refetchApplications();
+    }
+  }, [selectedProject, refetchApplications]);
+
   // Helper functions to convert filter names to IDs using catalog data
   const mapNamesToIds = {
     especialidades: (names: string[]): string[] => {
       return names.map((name) => {
         const item = catalogData.specialties.find((s) => s.name === name);
-        return item?.id || name; // Fallback to name if ID not found
+        return item?.id || name; // Recurre al nombre si no se encuentra el ID
       });
     },
     habilidades: (names: string[]): string[] => {
       return names.map((name) => {
         const item = catalogData.skills.find((s) => s.name === name);
-        return item?.id || name; // Fallback to name if ID not found
+        return item?.id || name; // Recurre al nombre si no se encuentra el ID
       });
     },
     tipoProyecto: (names: string[]): string[] => {
       return names.map((name) => {
         const item = catalogData.categories.find((c) => c.name === name);
-        return item?.id || name; // Fallback to name if ID not found
+        return item?.id || name; // Recurre al nombre si no se encuentra el ID
       });
     },
     industria: (names: string[]): string => {

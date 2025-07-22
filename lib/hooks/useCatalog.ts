@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { catalogService } from '@/lib/api/catalog'
 import { Specialty, Skill, Industry, Category, Subcategory, ApiError } from '@/types/api'
 
+/**
+ * Datos consolidados del catálogo de la aplicación
+ */
 interface CatalogData {
   specialties: Specialty[]
   skills: Skill[]
@@ -10,6 +13,9 @@ interface CatalogData {
   subcategories: Subcategory[]
 }
 
+/**
+ * Interfaz del valor de retorno del hook useCatalog
+ */
 interface UseCatalogReturn {
   data: CatalogData
   loading: boolean
@@ -17,6 +23,12 @@ interface UseCatalogReturn {
   refetch: () => Promise<void>
 }
 
+/**
+ * Hook personalizado para gestionar datos del catálogo
+ * Carga y mantiene todas las opciones disponibles para filtros
+ * 
+ * @returns Objeto con datos del catálogo, estado de carga y funciones de control
+ */
 export function useCatalog(): UseCatalogReturn {
   const [data, setData] = useState<CatalogData>({
     specialties: [],
@@ -28,11 +40,15 @@ export function useCatalog(): UseCatalogReturn {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  /**
+   * Obtiene todos los datos del catálogo en paralelo para mejor rendimiento
+   */
   const fetchCatalogData = async () => {
     try {
       setLoading(true)
       setError(null)
 
+      // Ejecuta todas las peticiones en paralelo para optimizar tiempo de carga
       const [specialties, skills, industries, categories, subcategories] = await Promise.all([
         catalogService.getSpecialties(),
         catalogService.getSkills(),
@@ -68,6 +84,12 @@ export function useCatalog(): UseCatalogReturn {
   }
 }
 
+/**
+ * Hook para obtener subcategorías filtradas por categoría
+ * 
+ * @param categoryId - ID de la categoría para filtrar subcategorías
+ * @returns Objeto con subcategorías filtradas y estado de carga
+ */
 export function useSubcategoriesByCategory(categoryId?: string) {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [loading, setLoading] = useState(false)

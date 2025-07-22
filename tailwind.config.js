@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Configuración del modo oscuro basado en clases CSS
   darkMode: ["class"],
+  // Rutas donde Tailwind debe buscar clases CSS para incluir en el bundle final
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -18,6 +20,7 @@ module.exports = {
       },
     },
     extend: {
+      // Colores personalizados usando variables CSS para soporte de temas
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -53,11 +56,13 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      // Radio de borde personalizado usando variables CSS
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      // Animaciones keyframes para componentes interactivos
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -68,11 +73,13 @@ module.exports = {
           to: { height: "0" },
         },
       },
+      // Definición de animaciones para acordeones y componentes desplegables
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
+  // Plugin de Tailwind para animaciones adicionales
   plugins: [require("tailwindcss-animate")],
 }

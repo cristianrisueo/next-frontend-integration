@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { projectsService } from '@/lib/api/projects'
 import { Project, ProjectsResponse, ProjectFilters, ApiError } from '@/types/api'
 
+/**
+ * Interfaz del valor de retorno del hook useProjects
+ */
 interface UseProjectsReturn {
   projects: Project[]
   loading: boolean
@@ -17,7 +20,15 @@ interface UseProjectsReturn {
   hasMore: boolean
 }
 
+/**
+ * Hook personalizado para gestionar el listado de proyectos
+ * Maneja carga inicial, paginación, filtrado y actualizaciones
+ * 
+ * @param initialFilters - Filtros iniciales para aplicar
+ * @returns Objeto con proyectos, estados de carga, paginación y funciones de control
+ */
 export function useProjects(initialFilters: ProjectFilters = {}) {
+  // Estados del hook
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -35,6 +46,10 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
     totalPages: 0,
   })
 
+  /**
+   * Función para obtener proyectos de la API
+   * Maneja tanto carga inicial como carga de más elementos
+   */
   const fetchProjects = useCallback(async (isLoadMore = false) => {
     try {
       if (isLoadMore) {
@@ -46,7 +61,7 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
 
       const currentFilters = isLoadMore ? { ...filters, page: filters.page! + 1 } : filters
       
-      // Use search endpoint if any filters are applied (beyond basic status/page/limit)
+      // Usa endpoint de búsqueda si se aplican filtros (más allá de status/page/limit básicos)
       const hasFilters = currentFilters.specialties || currentFilters.skills || 
                         currentFilters.industry || currentFilters.category || 
                         currentFilters.subcategory || currentFilters.q
@@ -80,8 +95,12 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
     }
   }, [filters])
 
+  /**
+   * Actualiza los filtros aplicados a la búsqueda
+   * Resetea a la primera página cuando cambian los filtros
+   */
   const updateFilters = useCallback((newFilters: Partial<ProjectFilters>) => {
-    // If only basic properties are provided, reset filters completely
+    // Si solo se proporcionan propiedades básicas, resetea filtros completamente
     const hasSearchFilters = newFilters.specialties || newFilters.skills || 
                              newFilters.industry || newFilters.category || 
                              newFilters.subcategory || newFilters.q;
@@ -91,7 +110,7 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
         status: newFilters.status || 'PUBLISHED',
         page: 1,
         limit: newFilters.limit || 10,
-        // Always preserve sort parameters even when no search filters
+        // Siempre preserva parámetros de ordenamiento incluso sin filtros de búsqueda
         sortBy: newFilters.sortBy,
         order: newFilters.order,
       })
@@ -99,7 +118,7 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
       setFilters(prev => ({
         ...prev,
         ...newFilters,
-        page: 1, // Reset to first page when filters change
+        page: 1, // Resetea a primera página cuando cambian los filtros
       }))
     }
   }, [])
@@ -130,6 +149,12 @@ export function useProjects(initialFilters: ProjectFilters = {}) {
   }
 }
 
+/**
+ * Hook para obtener un proyecto individual por ID
+ * 
+ * @param id - ID del proyecto a obtener
+ * @returns Objeto con proyecto, estado de carga y error
+ */
 export function useProject(id: string) {
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)

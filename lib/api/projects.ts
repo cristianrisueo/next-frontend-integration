@@ -1,10 +1,13 @@
 import { apiClient } from './client'
 import { Project, ProjectsResponse, ProjectFilters } from '@/types/api'
 
-// Cache for skills and specialties to avoid multiple API calls
+// Caché para habilidades y especialidades para evitar múltiples llamadas a la API
 let skillsCache: any[] = []
 let specialtiesCache: any[] = []
 
+/**
+ * Obtiene habilidades con caché para optimizar rendimiento
+ */
 const getSkills = async () => {
   if (skillsCache.length === 0) {
     skillsCache = await apiClient.get<any[]>('/skills')
@@ -12,6 +15,9 @@ const getSkills = async () => {
   return skillsCache
 }
 
+/**
+ * Obtiene especialidades con caché para optimizar rendimiento
+ */
 const getSpecialties = async () => {
   if (specialtiesCache.length === 0) {
     specialtiesCache = await apiClient.get<any[]>('/specialties')
@@ -19,10 +25,14 @@ const getSpecialties = async () => {
   return specialtiesCache
 }
 
+/**
+ * Transforma datos de proyecto de la API al formato esperado por el frontend
+ * Resuelve referencias de habilidades y especialidades usando caché
+ */
 const transformProject = async (apiProject: any): Promise<Project> => {
   const [skills, specialties] = await Promise.all([getSkills(), getSpecialties()])
   
-  // Extract all skills from positions
+  // Extrae todas las habilidades de las posiciones
   const allSkillIds = (apiProject.positions || []).flatMap((pos: any) => pos.skills || [])
   const uniqueSkillIds = [...new Set(allSkillIds)]
   const projectSkills = uniqueSkillIds.map(skillId => {
@@ -30,7 +40,7 @@ const transformProject = async (apiProject: any): Promise<Project> => {
     return skill || { id: skillId, name: `Skill ${skillId}` }
   })
   
-  // Get primary specialty (from first position)
+  // Obtiene la especialidad principal (de la primera posición)
   const firstPosition = apiProject.positions?.[0]
   const specialtyId = firstPosition?.specialties?.[0]
   const specialty = specialties.find(s => s.id === specialtyId)
@@ -56,7 +66,14 @@ const transformProject = async (apiProject: any): Promise<Project> => {
   }
 }
 
+/**
+ * Servicio para operaciones relacionadas con proyectos
+ * Maneja obtención, transformación y búsqueda de proyectos
+ */
 export const projectsService = {
+  /**
+   * Obtiene lista de proyectos con filtros opcionales
+   */
   async getProjects(filters: ProjectFilters = {}): Promise<ProjectsResponse> {
     const params = {
       ...filters,
@@ -66,7 +83,7 @@ export const projectsService = {
     
     const response = await apiClient.get<any>('/projects', params)
     
-    // Transform projects to match expected format
+    // Transforma proyectos al formato esperado
     const transformedProjects = await Promise.all(
       (response.projects || []).map(transformProject)
     )
@@ -80,11 +97,17 @@ export const projectsService = {
     }
   },
 
+  /**
+   * Obtiene un proyecto específico por ID
+   */
   async getProject(id: string): Promise<Project> {
     const apiProject = await apiClient.get<any>(`/projects/${id}`)
     return transformProject(apiProject)
   },
 
+  /**
+   * Busca proyectos con filtros avanzados
+   */
   async searchProjects(filters: ProjectFilters = {}): Promise<ProjectsResponse> {
     const params = {
       ...filters,
@@ -94,7 +117,7 @@ export const projectsService = {
     
     const response = await apiClient.get<any>('/projects/search', params)
     
-    // Transform projects to match expected format
+    // Transforma proyectos al formato esperado
     const transformedProjects = await Promise.all(
       (response.projects || []).map(transformProject)
     )

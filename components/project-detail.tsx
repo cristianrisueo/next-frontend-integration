@@ -25,11 +25,15 @@ interface ProjectDetailProps {
   onBack: () => void;
 }
 
+/**
+ * Componente de vista detallada de un proyecto
+ * Muestra información completa del proyecto y permite aplicar/retirar aplicaciones
+ */
 export default function ProjectDetail({
   projectId,
   onBack,
 }: ProjectDetailProps) {
-  // Use hooks to fetch project data and manage applications
+  // Utiliza hooks para obtener datos del proyecto y gestionar aplicaciones
   const { project, loading, error } = useProject(projectId);
   const {
     applyToProject,
@@ -44,7 +48,7 @@ export default function ProjectDetail({
     type: "success" | "error";
   } | null>(null);
 
-  // Cleanup function for timeouts
+  // Función de limpieza para timeouts
   useEffect(() => {
     return () => {
       setNotification(null);
